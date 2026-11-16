@@ -40,7 +40,7 @@ Studentët kanë Contributor, Key Vault Administrator dhe User Access Administra
 
 Kujdes: connection string-ët përdorin admin-in e serverit të përbashkët, kështu që një student teknikisht mund të prekë databazat e të tjerëve. Pranueshme për demo, jo për prodhim.
 
-Kosto: SQL ka kufi falas (10 databaza për abonim), App Service F1 falas, PostgreSQL B1ms paguhet (ndalojeni pas mësimit), Key Vault dhe Storage kushtojnë shumë pak.
+Kosto: SQL ka kufi falas (10 databaza për abonim), App Service B1 (rreth 13 USD/muaj; F1 falas bllokohet nga kuota CPU), PostgreSQL B1ms paguhet (ndalojeni pas mësimit), Key Vault dhe Storage kushtojnë shumë pak.
 
 Lokalisht: `dotnet run --project src` (kërkon LocalDB dhe PostgreSQL ose vendosni `ConnectionStrings__*`).
 

@@ -152,7 +152,7 @@ az account show
 ./scripts/setup.ps1 -Student emri
 ```
 Skripti bën këto:
-- krijon **App Service Plan** `plan-<emri>` (F1, falas, Linux);
+- krijon **App Service Plan** `plan-<emri>` (B1, Basic, Linux);
 - krijon **Web App** `app-<emri>-xxxxx` (.NET 10);
 - aktivizon **Managed Identity** të web app-it;
 - vendos emrin e container-it Blob (`Blob__Container`).
@@ -304,7 +304,7 @@ Për secilin burim: **çfarë është**, **si e përdorim**, **çfarë konfiguri
 
 ### 5.2 App Service (web app)
 - **Çfarë është:** hosting i menaxhuar për aplikacione web (PaaS); s'keni nevojë për server.
-- **Si e përdorim:** ekzekuton aplikacionin MVC. Plani **F1** është falas (kufizime: 60 min CPU/ditë, pa Always On).
+- **Si e përdorim:** ekzekuton aplikacionin MVC. Plani **B1** (Basic) ka pagesë të vogël por nuk bllokohet; F1 (falas) ka kuotë 60 min CPU/ditë dhe web app-i çaktivizohet kur kalohet (gabimi *Site Disabled 403*).
 - **Çfarë të shihni në Portal:**
   - *Overview*: URL, statusi, plani.
   - **Settings → Environment variables → App settings**: `ConnectionStrings__Sql`, `__Postgres`, `__Storage`, `__Queue`, `Blob__Container`, `APPLICATIONINSIGHTS_CONNECTION_STRING`. Referencat Key Vault shfaqen me statusin *Resolved*.
@@ -524,7 +524,7 @@ Ky mjedis është për mësim: është i thjeshtë dhe pa kosto. Një aplikacion
 | **Hyrja në databazë** | Admini `dbadmin` me fjalëkalim | **Entra ID authentication** me Managed Identity; përdorues me të drejta minimale (vetëm lexim/shkrim në tabelat e veta) |
 | **Storage** | Çelës llogarie (`AccountKey`) dhe container publik (`blob`) | Managed Identity + rolet *Storage Blob Data Contributor*, container privat, linke SAS me afat |
 | **Key Vault** | Aksesi publik | Firewall/Private Endpoint, **soft delete + purge protection**, rotacion i sekreteve, alarme |
-| **Plani i App Service** | F1 (falas, pa SLA, pa Always On, kuota CPU) | B1/P0v3 ose më lart, **Always On**, **autoscale**, **deployment slots** (staging → swap) |
+| **Plani i App Service** | B1 (Basic, pa SLA, pa Always On) | P0v3 ose më lart, **Always On**, **autoscale**, **deployment slots** (staging → swap) |
 | **Databaza SQL** | Serverless me pauzë automatike | Nivel i caktuar (vCore/DTU), **backup dhe point-in-time restore**, geo-replikim sipas nevojës |
 | **PostgreSQL** | B1ms, pa HA | General Purpose me **High Availability**, backup me retention më të gjatë |
 | **HTTPS dhe domeni** | `*.azurewebsites.net` | Domen i vetin, certifikatë e menaxhuar, **HTTPS Only**, TLS 1.2+, HSTS |

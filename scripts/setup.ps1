@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   Çfarë bën ky skript:
-    1. Krijon një App Service Plan (serveri ku do të ekzekutohet aplikacioni), niveli F1 = falas.
+    1. Krijon një App Service Plan (serveri ku do të ekzekutohet aplikacioni), niveli B1 (Basic, me pagesë të vogël; F1 falas ka kuotë 60 min CPU/ditë dhe bllokohet).
     2. Krijon Web App-in (aplikacionin .NET 10) mbi atë plan.
     3. Aktivizon Managed Identity: një "identitet" i web app-it, me të cilin më vonë do të
        hyjë në Key Vault pa fjalëkalim.
@@ -32,9 +32,9 @@ $app = "app-$s-$(Hash5 "$SubscriptionId$s")"            # emri i web app-it; pra
 # Zgjedh subscription-in e klasës (që komandat të ekzekutohen aty)
 Run az account set --subscription $SubscriptionId
 
-Write-Host "== App Service (F1 Free, Linux, .NET 10)" -ForegroundColor Cyan
-# 1) App Service Plan: "serveri" (F1 = falas, --is-linux = sistem Linux)
-Run az appservice plan create -n "plan-$s" -g $rg -l $Location --sku F1 --is-linux -o none
+Write-Host "== App Service (B1, Linux, .NET 10)" -ForegroundColor Cyan
+# 1) App Service Plan: "serveri" (B1 = Basic, --is-linux = sistem Linux)
+Run az appservice plan create -n "plan-$s" -g $rg -l $Location --sku B1 --is-linux -o none
 # 2) Web App: aplikacioni që do të hapet në internet, me runtime .NET 10
 Run az webapp create -n $app -g $rg -p "plan-$s" --runtime "DOTNETCORE:10.0" -o none
 # 3) Managed Identity: identiteti i aplikacionit për Key Vault
