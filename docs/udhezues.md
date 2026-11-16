@@ -11,6 +11,7 @@
 8. [Siguria](#8-siguria)
 9. [Probleme të zakonshme](#9-probleme-të-zakonshme)
 10. [Pastrimi pas mësimit](#10-pastrimi-pas-mësimit)
+11. [Konfigurime shtesë për produksion](#11-konfigurime-shtesë-për-produksion)
 
 ---
 
@@ -235,6 +236,7 @@ Hapni https://portal.azure.com → grupi `rg-<emri>` dhe kontrolloni një nga nj
 | Key Vault → **Objects → Secrets** | `SqlConnection`, `PostgresConnection`, `StorageConnection` | Këtu janë ruajtur sekretet |
 | Key Vault → **Access control (IAM) → Role assignments** | Web app-i me rolin *Key Vault Secrets User* | Lejet jepen me role, vetëm për lexim |
 | `rg-shared` → SQL server → databaza `db-<emri>` → **Query editor** | `SELECT * FROM Studentet;` shfaq studentin që shtuat | Të dhënat u ruajtën në Azure SQL |
+| `rg-shared` → PostgreSQL `psql-fakulteti-qzpml` → **Settings → Databases** (të dhënat me `psql` ose VS Code) | Databaza `<emri>`; me `psql`: `SELECT * FROM "Njoftimet" ORDER BY "Data" DESC;` shfaq njoftimin që shtuat | Të dhënat u ruajtën në PostgreSQL (Portal nuk ka Query editor për të; shih 5.5) |
 | `rg-shared` → Storage `stfakultetif7k2q` → **Containers → dokumentet-<emri>** | Skedari që ngarkuat nga aplikacioni | Blob Storage |
 | `rg-<emri>` → **Access control (IAM)** → Role assignments | Identiteti `gh-deploy-<emri>` me rolin *Contributor* | Kush mund të bëjë deploy në grupin tuaj |
 | Microsoft Entra ID → **App registrations** → `gh-deploy-<emri>` → **Certificates & secrets → Federated credentials** | Credential me `repo:<github-user>/FakultetiApp:ref:refs/heads/main` | Pse GitHub hyn pa fjalëkalim |
@@ -511,6 +513,29 @@ exceptions | order by timestamp desc | take 20
 - **PostgreSQL kushton**; profesori e ndalon: `./scripts/cleanup.ps1 -Student emri -StopOnly`.
 - Për të fshirë burimet tuaja: `az group delete -n rg-<emri> --yes --no-wait` (fshin gjithçka në grupin tuaj; databazat në `rg-shared` i fshin profesori).
 - Verifikim: *Portal → Resource groups*; grupi nuk duhet të ekzistojë më.
+
+## 11. Konfigurime shtesë për produksion
+
+Ky mjedis është për mësim: është i thjeshtë dhe pa kosto. Një aplikacion i vërtetë kërkon këto ndryshime shtesë.
+
+| Fusha | Në klasë | Në produksion |
+|---|---|---|
+| **Rrjeti i databazave** | Firewall i hapur për çdo IP | Firewall i ngushtë ose **Private Endpoint** + VNet integration te web app |
+| **Hyrja në databazë** | Admini `dbadmin` me fjalëkalim | **Entra ID authentication** me Managed Identity; përdorues me të drejta minimale (vetëm lexim/shkrim në tabelat e veta) |
+| **Storage** | Çelës llogarie (`AccountKey`) dhe container publik (`blob`) | Managed Identity + rolet *Storage Blob Data Contributor*, container privat, linke SAS me afat |
+| **Key Vault** | Aksesi publik | Firewall/Private Endpoint, **soft delete + purge protection**, rotacion i sekreteve, alarme |
+| **Plani i App Service** | F1 (falas, pa SLA, pa Always On, kuota CPU) | B1/P0v3 ose më lart, **Always On**, **autoscale**, **deployment slots** (staging → swap) |
+| **Databaza SQL** | Serverless me pauzë automatike | Nivel i caktuar (vCore/DTU), **backup dhe point-in-time restore**, geo-replikim sipas nevojës |
+| **PostgreSQL** | B1ms, pa HA | General Purpose me **High Availability**, backup me retention më të gjatë |
+| **HTTPS dhe domeni** | `*.azurewebsites.net` | Domen i vetin, certifikatë e menaxhuar, **HTTPS Only**, TLS 1.2+, HSTS |
+| **Monitorimi** | Application Insights bazë | **Alerts** (gabime 5xx, koha e përgjigjes, CPU), dashboards, retention e logeve, Availability tests |
+| **CI/CD** | Deploy direkt në `main` | Mjedise (dev/test/prod), **GitHub Environments** me miratim manual, testime automatike, branch protection |
+| **Infrastruktura** | Skripta PowerShell/CLI | **Infrastructure as Code** (Bicep ose Terraform) në repo |
+| **Qeverisja** | Contributor te grupi | Princip i privilegjit minimal, **Azure Policy**, tags, buxhet dhe alarme kostoje, resource locks |
+| **Siguria e aplikacionit** | Aplikacion demonstrues | Validim i të dhënave, autentikim/autorizim (Entra ID), CORS, **Defender for Cloud**, skanim varësish (Dependabot) |
+| **Ruajtja e fjalëkalimeve** | Në `te-dhenat-e-klases.md` (vetëm demo) | Kurrë në repo; vetëm Key Vault; rotacion pas çdo ekspozimi |
+
+**Hapi i parë i rekomanduar në praktikë:** hiqni fjalëkalimin e adminit dhe çelësin e Storage, dhe kaloni në Managed Identity.
 
 ## Shtojca: struktura e repo-s
 ```
