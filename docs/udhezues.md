@@ -101,7 +101,7 @@ Në fund shfaq `APP_NAME`. Shënojeni, do ta përdorni në GitHub.
 **Verifikim në Portal:** `rg-<emri>` → duhet të shihni *App Service plan* dhe *App Service*. Hapni App Service-in → **Overview → Default domain**. Faqja do të tregojë faqen bosh të Azure (nuk ka deploy ende).
 
 ### Hapi 2: Databazat, container-i dhe sekretet (e bën profesori)
-Jepini profesorit `APP_NAME`. Ai ekzekuton `provision-student.ps1`, që krijon:
+Databazat, container-i dhe sekretet janë krijuar paraprakisht nga profesori; emrat dhe fjalëkalimet janë te [te-dhenat-e-klases.md](te-dhenat-e-klases.md). Pasi të keni web app-in, jepini profesorit `APP_NAME` që të ekzekutojë përsëri `provision-student.ps1` (jep lejen e Key Vault për identitetin tuaj). Skripti krijon:
 - databazën SQL `db-<emri>` në serverin e përbashkët;
 - databazën PostgreSQL `<emri>` në serverin e përbashkët;
 - Blob container `dokumentet-<emri>`;

@@ -36,14 +36,16 @@ $secrets = @{
 }
 $kvId = az keyvault show -n $SharedKv -g $SharedRg --query id -o tsv
 $app = az webapp list -g "rg-$s" --query "[0].name" -o tsv
-if (-not $app) { throw "Web app në rg-$s nuk ekziston. Studenti duhet të ekzekutojë setup.ps1 më parë." }
-$principal = az webapp identity show -n $app -g "rg-$s" --query principalId -o tsv
+$principal = $null
+if ($app) { $principal = az webapp identity show -n $app -g "rg-$s" --query principalId -o tsv }
+else { Write-Host "Web app s'ekziston ende: lejet anashkalohen (rinisni skriptin pasi studenti të bëjë setup.ps1)." -ForegroundColor Yellow }
 
 foreach ($name in $secrets.Keys) {
     Run az keyvault secret set --vault-name $SharedKv -n $name --value $secrets[$name] -o none
+    if (-not $principal) { continue }
     # leje vetëm për këtë sekret, jo për të gjithë vault-in
     $scope = "$kvId/secrets/$name"
     Run az role assignment create --assignee-object-id $principal --assignee-principal-type ServicePrincipal --role "Key Vault Secrets User" --scope $scope -o none
 }
-Run az webapp restart -n $app -g "rg-$s"
+if ($app) { Run az webapp restart -n $app -g "rg-$s" }
 Write-Host "Gati për $s. Web app: https://$app.azurewebsites.net" -ForegroundColor Green
