@@ -22,17 +22,26 @@ az ad sp create --id $appId -o none
 az role assignment create --assignee $appId --role Contributor `
     --scope "/subscriptions/$SubscriptionId/resourceGroups/$rg" -o none
 
-$cred = @{
-    name      = "github-$s"
-    issuer    = "https://token.actions.githubusercontent.com"
-    subject   = "repo:${GitHubRepo}:ref:refs/heads/$Branch"
-    audiences = @("api://AzureADTokenExchange")
-} | ConvertTo-Json -Compress
-$tmp = New-TemporaryFile
-Set-Content $tmp $cred
-az ad app federated-credential create --id $appId --parameters "@$tmp" -o none
-Remove-Item $tmp
-
+# GitHub mund ta dërgojë subject-in me ID (owner@id/repo@id) ose me emra; regjistrojmë të dyja
+$subjects = @("repo:${GitHubRepo}:ref:refs/heads/$Branch")
+$info = gh api "repos/$GitHubRepo" 2>$null | ConvertFrom-Json
+if ($info) {
+    $subjects += "repo:$($info.owner.login)@$($info.owner.id)/$($info.name)@$($info.id):ref:refs/heads/$Branch"
+}
+$n = 0
+foreach ($subject in $subjects) {
+    $n++
+    $cred = @{
+        name      = "github-$s-$n"
+        issuer    = "https://token.actions.githubusercontent.com"
+        subject   = $subject
+        audiences = @("api://AzureADTokenExchange")
+    } | ConvertTo-Json -Compress
+    $tmp = New-TemporaryFile
+    [IO.File]::WriteAllText($tmp.FullName, $cred)
+    az ad app federated-credential create --id $appId --parameters "@$($tmp.FullName)" -o none
+    Remove-Item $tmp
+}
 $app = az webapp list -g $rg --query "[0].name" -o tsv
 Write-Host "`nGitHub Secrets për $GitHubRepo :" -ForegroundColor Green
 Write-Host "AZURE_CLIENT_ID       = $appId"
