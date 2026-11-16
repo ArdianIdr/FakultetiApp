@@ -3,7 +3,7 @@ $TenantId       = "e7dd866d-a284-43a6-90aa-9aad6684a2f0"
 $SharedRg       = "rg-shared"
 $Admin          = "dbadmin"
 
-function Run { & $args[0] $args[1..($args.Length-1)]; if ($LASTEXITCODE -ne 0) { throw "Dështoi: $($args -join ' ')" } }
+function Run { $ErrorActionPreference = "Continue"; & $args[0] $args[1..($args.Length-1)]; if ($LASTEXITCODE -ne 0) { throw "Dështoi: $($args -join ' ')" } }
 function Hash5($text) {
     $md5 = [Security.Cryptography.MD5]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($text))
     ([BitConverter]::ToString($md5) -replace '-', '').Substring(0, 5).ToLower()
