@@ -2,6 +2,8 @@
 
 ASP.NET Core MVC (.NET 10) me: **Azure SQL** (studentët), **PostgreSQL** (njoftimet), **Blob Storage** (dokumentet), **Key Vault** (sekretet) dhe **App Service** (hosting).
 
+> **Udhëzuesi i plotë (arkitektura, burimet, deploy, detyra): [docs/udhezues.md](docs/udhezues.md)**
+
 ## Hapat për studentin
 
 1. **Fork** këtë repo në GitHub-in tuaj.
