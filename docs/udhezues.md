@@ -101,7 +101,7 @@ Në fund shfaq `APP_NAME`. Shënojeni, do ta përdorni në GitHub.
 **Verifikim në Portal:** `rg-<emri>` → duhet të shihni *App Service plan* dhe *App Service*. Hapni App Service-in → **Overview → Default domain**. Faqja do të tregojë faqen bosh të Azure (nuk ka deploy ende).
 
 ### Hapi 2: Databazat, container-i dhe sekretet (e bën profesori)
-Databazat, container-i dhe sekretet janë krijuar paraprakisht nga profesori; emrat dhe fjalëkalimet janë te [te-dhenat-e-klases.md](te-dhenat-e-klases.md). Pasi të keni web app-in, jepini profesorit `APP_NAME` që të ekzekutojë përsëri `provision-student.ps1` (jep lejen e Key Vault për identitetin tuaj). Skripti krijon:
+Databazat, container-i dhe sekretet janë krijuar paraprakisht nga profesori; emrat dhe fjalëkalimet janë te [te-dhenat-e-klases.md](te-dhenat-e-klases.md). Skripti i profesorit krijon:
 - databazën SQL `db-<emri>` në serverin e përbashkët;
 - databazën PostgreSQL `<emri>` në serverin e përbashkët;
 - Blob container `dokumentet-<emri>`;
@@ -114,6 +114,13 @@ Databazat, container-i dhe sekretet janë krijuar paraprakisht nga profesori; em
 - *rg-shared → Storage account → Data storage → Containers*: shihni `dokumentet-<emri>`.
 - *rg-shared → Key Vault → Objects → Secrets*: shihni sekretet `<emri>-...`.
 - *rg-<emri> → App Service → Settings → Environment variables*: te `ConnectionStrings__Sql` duhet të shihni statusin **Key Vault Reference: Resolved** (gjelbër). Nëse del e kuqe, leja ende nuk është dhënë ose duhet *Restart*.
+
+### Hapi 2b: Key Vault-i juaj
+Ngjiteni skriptin nga [te-dhenat-e-klases.md](te-dhenat-e-klases.md):
+```powershell
+./scripts/keyvault-student.ps1 -Student emri -SqlPassword "..." -PgPassword "..." -StorageKey "..."
+```
+**Verifikim në Portal:** `rg-<emri>` → Key Vault `kv-<emri>-xxxxx` → *Secrets* (3 sekrete); web app → *Environment variables* → **Resolved**.
 
 ### Hapi 3: Lidhja OIDC (e bën profesori)
 Jepini profesorit emrin tuaj të përdoruesit në GitHub. Ai ekzekuton `new-student-identity.ps1`, që krijon një **App Registration** `gh-deploy-<emri>`, një **federated credential** për forkun tuaj (vetëm dega `main`) dhe rolin *Contributor* në `rg-<emri>`. Ju jep `AZURE_CLIENT_ID`.

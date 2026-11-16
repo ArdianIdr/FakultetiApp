@@ -36,19 +36,22 @@ Postgres: Host=psql-fakulteti-qzpml.postgres.database.azure.com;Port=5432;Databa
 - **PostgreSQL:** `psql "host=psql-fakulteti-qzpml.postgres.database.azure.com dbname=<emri> user=dbadmin sslmode=require"`; pastaj `SELECT * FROM "Njoftimet";`
 - **Blob:** Portal → `stfakultetif7k2q` → Containers → `dokumentet-<emri>`
 
-## Si i përdorni (zgjidhni një)
+## Çelësi i Storage
+Jepet nga profesori gojarisht/në chat (GitHub nuk lejon çelësa Azure në repo).
 
-**A) Drejtpërdrejt si App settings** (më e thjeshta). Pas `setup.ps1`:
+`<çelësi-i-storage>`
+
+## Key Vault-i juaj (secili krijon të vetin)
+
+Profesori ju ka dhënë në g-<emri> rolet **Key Vault Administrator** dhe **User Access Administrator**, që të krijoni Key Vault-in dhe t'i jepni web app-it leje. Pasi të keni bërë setup.ps1 (web app ekziston):
+
 ```powershell
-$s = "emri"; $rg = "rg-$s"
-$app = az webapp list -g $rg --query "[0].name" -o tsv
-@{
-  "ConnectionStrings__Sql"      = "<Sql nga lart>"
-  "ConnectionStrings__Postgres" = "<Postgres nga lart>"
-} | ConvertTo-Json | Set-Content db.json
-az webapp config appsettings set -g $rg -n $app --settings "@db.json"
-Remove-Item db.json
+./scripts/keyvault-student.ps1 -Student emri `
+  -SqlPassword "Sql!81dbe3dd8a874537" `
+  -PgPassword "Pg!94ddacf2a9e244f7" `
+  -StorageKey "<çelësi-i-storage>"
 ```
-Verifikim: Portal → App Service → *Environment variables*.
 
-**B) Me Key Vault:** `setup.ps1` vendos tashmë referencat `@Microsoft.KeyVault(...)`. Sekretet `<emri>-SqlConnection`, `<emri>-PostgresConnection`, `<emri>-StorageConnection` ekzistojnë në `kv-fakulteti-f7k2q`. Profesori ekzekuton `./scripts/provision-student.ps1 -Student <emri>` përsëri pasi të ekzistojë web app-i, për t'i dhënë lejen identitetit të tij. Verifikim: *Environment variables* → statusi *Resolved*.
+Skripti: krijon kv-<emri>-xxxxx në g-<emri>, ruan sekretet SqlConnection, PostgresConnection, StorageConnection, i jep identitetit të web app-it rolin *Key Vault Secrets User* dhe vendos referencat @Microsoft.KeyVault(...). Rolet RBAC mund të vonojnë 1–5 minuta; skripti pret vetë.
+
+**Verifikim në Portal:** g-<emri> → Key Vault → *Objects → Secrets* (3 sekrete); web app → *Environment variables* → statusi **Resolved**; Key Vault → *Access control (IAM)* → web app-i me *Key Vault Secrets User*.
