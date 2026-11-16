@@ -53,13 +53,14 @@ foreach ($name in $secrets.Keys) {
     # prandaj provojmë deri në 10 herë, çdo 30 sekonda. Mos e ndërprisni skriptin.
     for ($i = 1; $i -le 10; $i++) {
         $ErrorActionPreference = "Continue"
-        az keyvault secret set --vault-name $kv -n $name --value $secrets[$name] -o none 2>$null
+        $err = az keyvault secret set --vault-name $kv -n $name --value $secrets[$name] -o none 2>&1
         $ok = ($LASTEXITCODE -eq 0)
         $ErrorActionPreference = "Stop"
         if ($ok) { break }
         Write-Host "Po pres lejet ($i/10)..."; Start-Sleep 30
     }
-    if (-not $ok) { throw "Nuk u ruajt sekreti $name" }
+    # Pas 10 provave shfaqim gabimin e vërtetë të Azure, që të dihet shkaku
+    if (-not $ok) { Write-Host ($err | Out-String) -ForegroundColor Red; throw "Nuk u ruajt sekreti $name" }
 }
 
 # 3) Web app-i merr leje vetëm për të lexuar sekretet (jo për t'i ndryshuar)
