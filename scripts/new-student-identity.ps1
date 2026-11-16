@@ -17,14 +17,19 @@ $s = $Student.ToLower() -replace '[^a-z0-9]', ''
 $rg = "rg-$s"
 az account set --subscription $SubscriptionId
 
-$appId = az ad app create --display-name "gh-deploy-$s" --query appId -o tsv
-az ad sp create --id $appId -o none
+$appId = az ad app list --display-name "gh-deploy-$s" --query "[0].appId" -o tsv
+if (-not $appId) { $appId = az ad app create --display-name "gh-deploy-$s" --query appId -o tsv }
+if (-not (az ad sp list --filter "appId eq '$appId'" --query "[0].id" -o tsv)) { az ad sp create --id $appId -o none }
 az role assignment create --assignee $appId --role Contributor `
     --scope "/subscriptions/$SubscriptionId/resourceGroups/$rg" -o none
 
 # GitHub mund ta dërgojë subject-in me ID (owner@id/repo@id) ose me emra; regjistrojmë të dyja
 $subjects = @("repo:${GitHubRepo}:ref:refs/heads/$Branch")
+$ErrorActionPreference = "Continue"
 $info = gh api "repos/$GitHubRepo" 2>$null | ConvertFrom-Json
+$ErrorActionPreference = "Stop"
+if (-not $info.id) { $info = $null }
+if (-not $info) { Write-Host "Forku $GitHubRepo nuk ekziston ende; regjistrohet vetëm subject-i me emra. Pasi studenti të bëjë fork, ekzekutoni skriptën përsëri." -ForegroundColor Yellow }
 if ($info) {
     $subjects += "repo:$($info.owner.login)@$($info.owner.id)/$($info.name)@$($info.id):ref:refs/heads/$Branch"
 }
@@ -37,6 +42,8 @@ foreach ($subject in $subjects) {
         subject   = $subject
         audiences = @("api://AzureADTokenExchange")
     } | ConvertTo-Json -Compress
+    $have = az ad app federated-credential list --id $appId --query "[?subject=='$subject'].name" -o tsv
+    if ($have) { continue }
     $tmp = New-TemporaryFile
     [IO.File]::WriteAllText($tmp.FullName, $cred)
     az ad app federated-credential create --id $appId --parameters "@$($tmp.FullName)" -o none
