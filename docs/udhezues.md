@@ -27,6 +27,42 @@ Aplikacioni është një sistem i thjeshtë për Fakultetin e Informatikës (ASP
 - si bëhet deploy nga GitHub Actions pa sekrete të gjata (OIDC);
 - si monitorohet aplikacioni live.
 
+### Rendi i hapave (përmbledhje)
+
+| # | Hapi | Kush e bën | Skripti / vendi |
+|---|---|---|---|
+| 0 | Fork, klonim, `az login` | Ju | `gh`, `az` |
+| 1 | Web app | Ju | `scripts/setup.ps1` |
+| 2 | Databazat dhe container-i | Profesori (të gatshme) | shih `te-dhenat-e-klases.md` |
+| 2b | Key Vault-i juaj + sekretet | Ju | `scripts/keyvault-student.ps1` |
+| 3 | Lidhja OIDC | Profesori | `new-student-identity.ps1` |
+| 4 | Sekretet në GitHub | Ju | GitHub → Settings → Secrets |
+| 5 | Deploy | Ju | GitHub → Actions |
+| 6–9 | Application Insights, Queue, Function | Ju | Mësimi 2 |
+
+**Respektoni rendin.** Nëse një hap dështon, shihni seksionin [Probleme të zakonshme](#9-probleme-të-zakonshme) para se të vazhdoni.
+
+### Fjalorth i shkurtër (për fillestarë)
+
+| Termi | Në fjalë të thjeshta |
+|---|---|
+| **Subscription** | "Llogaria e faturimit" ku krijohen burimet (e profesorit) |
+| **Resource Group** | Dosje që mban burimet tuaja; ju keni të drejta vetëm në `rg-<emri>` |
+| **App Service** | Shërbimi që hoston (ekzekuton) web app-in tuaj në internet |
+| **Azure SQL / PostgreSQL** | Dy lloje databazash relacionale në cloud |
+| **Blob Storage** | Vend për skedarë (dokumente, foto) |
+| **Queue** | Radhë mesazhesh: një pjesë e aplikacionit lë mesazh, tjetra e lexon |
+| **Function** | Kod i vogël që ekzekutohet automatikisht kur ndodh një ngjarje |
+| **Key Vault** | Kasafortë për fjalëkalime dhe connection string-ë |
+| **Managed Identity** | "Identiteti" i web app-it, me të cilin hyn në Key Vault pa fjalëkalim |
+| **RBAC / Role** | Të drejtat (p.sh. Contributor = mund të krijojë dhe ndryshojë burime) |
+| **OIDC** | Mënyra që GitHub hyn në Azure pa fjalëkalim të ruajtur |
+| **Application Insights** | Monitorim: kërkesat, gabimet dhe performanca e aplikacionit |
+
+**Ku i gjej vlerat?** Emrat e serverëve, fjalëkalimet e databazave dhe komandën e Key Vault: [te-dhenat-e-klases.md](te-dhenat-e-klases.md). Çelësin e Storage (`-StorageKey`) e jep profesori në klasë.
+
+**Çfarë do të keni në fund:** një web app në internet me adresë `https://app-<emri>-xxxxx.azurewebsites.net`, që lexon studentët nga SQL, njoftimet nga PostgreSQL, ngarkon dokumente në Blob dhe monitorohet në Application Insights.
+
 ## 2. Arkitektura
 
 ![Arkitektura e FakultetiApp në Azure](img/arhitektura.svg)
@@ -94,9 +130,11 @@ Skripti bën këto:
 - krijon **App Service Plan** `plan-<emri>` (F1, falas, Linux);
 - krijon **Web App** `app-<emri>-xxxxx` (.NET 10);
 - aktivizon **Managed Identity** të web app-it;
-- vendos *App settings* me **referenca Key Vault** (`@Microsoft.KeyVault(...)`) për SQL, PostgreSQL dhe Storage.
+- vendos emrin e container-it Blob (`Blob__Container`).
 
-Në fund shfaq `APP_NAME`. Shënojeni, do ta përdorni në GitHub.
+Connection string-ët i vendos hapi 2b. Në fund skripti shfaq `APP_NAME`. **Shënojeni**, do ta përdorni në GitHub.
+
+Dalja e pritur (fundi): `== GATI ==`, `Web app: app-<emri>-xxxxx`.
 
 **Verifikim në Portal:** `rg-<emri>` → duhet të shihni *App Service plan* dhe *App Service*. Hapni App Service-in → **Overview → Default domain**. Faqja do të tregojë faqen bosh të Azure (nuk ka deploy ende).
 
@@ -105,22 +143,27 @@ Databazat, container-i dhe sekretet janë krijuar paraprakisht nga profesori; em
 - databazën SQL `db-<emri>` në serverin e përbashkët;
 - databazën PostgreSQL `<emri>` në serverin e përbashkët;
 - Blob container `dokumentet-<emri>`;
-- 3 sekrete në Key Vault (`<emri>-SqlConnection`, `<emri>-PostgresConnection`, `<emri>-StorageConnection`);
-- lejen *Key Vault Secrets User* për identitetin e web app-it tuaj, **vetëm për 3 sekretet tuaja**.
+- rolet tuaja në `rg-<emri>` (Contributor, Key Vault Administrator, User Access Administrator), që ju të krijoni Key Vault-in tuaj.
+
+Këtu nuk bëni asgjë, vetëm verifikoni.
 
 **Verifikim në Portal:**
 - *rg-shared → SQL server → SQL databases*: shihni `db-<emri>`.
 - *rg-shared → PostgreSQL server → Databases*: shihni `<emri>`.
 - *rg-shared → Storage account → Data storage → Containers*: shihni `dokumentet-<emri>`.
-- *rg-shared → Key Vault → Objects → Secrets*: shihni sekretet `<emri>-...`.
-- *rg-<emri> → App Service → Settings → Environment variables*: te `ConnectionStrings__Sql` duhet të shihni statusin **Key Vault Reference: Resolved** (gjelbër). Nëse del e kuqe, leja ende nuk është dhënë ose duhet *Restart*.
 
-### Hapi 2b: Key Vault-i juaj
-Ngjiteni skriptin nga [te-dhenat-e-klases.md](te-dhenat-e-klases.md):
+### Hapi 2b: Key Vault-i juaj (e bëni ju)
+Key Vault-i ruan connection string-ët; ky skript e krijon dhe e lidh me web app-in. Merrni fjalëkalimet nga [te-dhenat-e-klases.md](te-dhenat-e-klases.md) dhe çelësin e Storage nga profesori. Skripti:
+- krijon `kv-<emri>-xxxxx` (me RBAC);
+- vendos 3 sekrete: `SqlConnection`, `PostgresConnection`, `StorageConnection`;
+- i jep web app-it leje *Key Vault Secrets User* dhe vendos referencat `@Microsoft.KeyVault(...)` te App settings;
+- e rinis (restart) web app-in.
+
+Mund të presë 1–5 minuta që lejet të përhapen; skripti provon automatikisht, mos e ndërprisni.
 ```powershell
 ./scripts/keyvault-student.ps1 -Student emri -SqlPassword "..." -PgPassword "..." -StorageKey "..."
 ```
-**Verifikim në Portal:** `rg-<emri>` → Key Vault `kv-<emri>-xxxxx` → *Secrets* (3 sekrete); web app → *Environment variables* → **Resolved**.
+**Verifikim në Portal:** `rg-<emri>` → Key Vault `kv-<emri>-xxxxx` → *Objects → Secrets* (3 sekrete). Pastaj web app → *Settings → Environment variables*: te `ConnectionStrings__Sql` duhet **Key Vault Reference: Resolved** (gjelbër). Nëse del e kuqe, prisni 2 minuta dhe bëni *Restart*.
 
 ### Hapi 3: Lidhja OIDC (e bën profesori)
 Jepini profesorit emrin tuaj të përdoruesit në GitHub. Ai ekzekuton `new-student-identity.ps1`, që krijon një **App Registration** `gh-deploy-<emri>`, një **federated credential** për forkun tuaj (vetëm dega `main`) dhe rolin *Contributor* në `rg-<emri>`. Ju jep `AZURE_CLIENT_ID`.
@@ -410,7 +453,8 @@ exceptions | order by timestamp desc | take 20
 | `az login` hap tenant tjetër | `az login --tenant e7dd866d-a284-43a6-90aa-9aad6684a2f0` |
 | `MissingSubscriptionRegistration` | `az provider register -n <Provider>` dhe prisni 1–2 min |
 | Emri i web app / storage ekziston | Emrat janë globalë; ndryshoni prapashtesën |
-| Key Vault reference nuk zgjidhet (e kuqe) | Profesori s'ka ekzekutuar ende `provision-student.ps1`; pastaj *Restart* te web app |
+| Key Vault reference nuk zgjidhet (e kuqe) Ekzekutoni `keyvault-student.ps1` (hapi 2b); nëse e keni bërë, prisni 2–5 min për lejet dhe bëni *Restart* te web app |
+| `keyvault-student.ps1`: Forbidden / AuthorizationFailed | Lejet ende po përhapen; skripti provon vetë. Nëse vazhdon, njoftoni profesorin |
 | `azure/login` dështon (AADSTS70021) | Workflow nuk nisi nga `main` ose emri i forkut s'përputhet me credential |
 | SQL: lidhja e parë dështon/ngadalëson | Databaza ishte në pauzë; provoni përsëri pas 1 min |
 | `psql`: tabela nuk gjendet | Përdorni thonjëza: `"Njoftimet"` |
@@ -427,7 +471,9 @@ exceptions | order by timestamp desc | take 20
 ```
 src/                    aplikacioni ASP.NET Core MVC
 functions/              Azure Function (QueueTrigger)
-scripts/                setup.ps1, provision-student.ps1, new-student-identity.ps1, deploy-function.ps1, cleanup.ps1
+scripts/                setup.ps1, keyvault-student.ps1 (studenti);
+                        setup-shared.ps1, provision-student.ps1, new-student-identity.ps1, cleanup.ps1 (profesori);
+                        deploy-function.ps1
 docs/                   dokumentacioni (ky skedar) dhe img/arhitektura.svg
 .github/workflows/      deploy.yml
 ```

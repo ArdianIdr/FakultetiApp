@@ -1,7 +1,7 @@
 ﻿<#
 .SYNOPSIS
-  Krijon web app-in në rg-<student> dhe e lidh me sekretet në Key Vault-in e përbashkët.
-  Pastaj profesori ekzekuton provision-student.ps1.
+  Krijon web app-in në rg-<student> (App Service F1, .NET 10, Managed Identity).
+  Key Vault-in dhe connection string-ët i vendos pastaj keyvault-student.ps1.
 .EXAMPLE
   ./scripts/setup.ps1 -Student ardian
 #>
@@ -24,10 +24,7 @@ Run az webapp identity assign -n $app -g $rg -o none
 
 # referencat te Key Vault; vlerat lexohen pasi profesori jep lejet
 $settings = [ordered]@{
-    "ConnectionStrings__Sql"      = "@Microsoft.KeyVault(VaultName=$SharedKv;SecretName=$s-SqlConnection)"
-    "ConnectionStrings__Postgres" = "@Microsoft.KeyVault(VaultName=$SharedKv;SecretName=$s-PostgresConnection)"
-    "ConnectionStrings__Storage"  = "@Microsoft.KeyVault(VaultName=$SharedKv;SecretName=$s-StorageConnection)"
-    "Blob__Container"             = "dokumentet-$s"
+    "Blob__Container" = "dokumentet-$s"
 }
 $tmp = Join-Path ([IO.Path]::GetTempPath()) "settings-$s.json"
 [IO.File]::WriteAllText($tmp, ($settings | ConvertTo-Json))
@@ -36,4 +33,4 @@ Remove-Item $tmp
 Write-Host "`n== GATI ==" -ForegroundColor Green
 Write-Host "Web app: $app  (https://$app.azurewebsites.net)"
 Write-Host "APP_NAME për GitHub Secrets: $app"
-Write-Host "Tani profesori ekzekuton: ./scripts/provision-student.ps1 -Student $s"
+Write-Host "Hapi tjetër: ./scripts/keyvault-student.ps1 (shih docs/te-dhenat-e-klases.md)"
