@@ -221,6 +221,27 @@ gh secret set APP_NAME --body "<app-name>"
 - Në Portal: *App Service → Deployment → Deployment Center → Logs* shfaq deploy-in e fundit.
 - Hapni `https://<APP_NAME>.azurewebsites.net`: duhet të shihni aplikacionin në shqip. Shtoni një student dhe një njoftim.
 
+#### Çfarë të shihni në Portal pas deploy-it
+Hapni https://portal.azure.com → grupi `rg-<emri>` dhe kontrolloni një nga një:
+
+| Ku në Portal | Çfarë të shihni | Çfarë ju mëson |
+|---|---|---|
+| `rg-<emri>` → **Overview** | Lista e burimeve: App Service Plan, Web App, Key Vault (+ Application Insights, Storage, Function nëse i keni bërë) | Gjithçka që keni krijuar jetron në një grup |
+| Web App → **Overview** | *Status: Running*, *Default domain* (linku i aplikacionit), *Runtime: .NET 10* | Aplikacioni është online; klikoni linkun për ta hapur |
+| Web App → **Deployment → Deployment Center → Logs** | Rreshti i fundit me statusin *Success* dhe commit-in nga GitHub | Lidhja GitHub → Azure me OIDC funksionoi |
+| Web App → **Settings → Environment variables** | `ConnectionStrings__Sql`, `__Postgres`, `__Storage` me statusin **Key Vault Reference: Resolved** (ikona jeshile) | Fjalëkalimet vijnë nga Key Vault, jo nga kodi |
+| Web App → **Settings → Identity** | *System assigned: On* me një Object ID | Identiteti me të cilin web app-i hyn në Key Vault |
+| Web App → **Monitoring → Log stream** | Regjistrat live; hapni faqen e aplikacionit dhe shihni kërkesat | Çfarë po ndodh brenda aplikacionit |
+| Key Vault → **Objects → Secrets** | `SqlConnection`, `PostgresConnection`, `StorageConnection` | Këtu janë ruajtur sekretet |
+| Key Vault → **Access control (IAM) → Role assignments** | Web app-i me rolin *Key Vault Secrets User* | Lejet jepen me role, vetëm për lexim |
+| `rg-shared` → SQL server → databaza `db-<emri>` → **Query editor** | `SELECT * FROM Studentet;` shfaq studentin që shtuat | Të dhënat u ruajtën në Azure SQL |
+| `rg-shared` → Storage `stfakultetif7k2q` → **Containers → dokumentet-<emri>** | Skedari që ngarkuat nga aplikacioni | Blob Storage |
+| `rg-<emri>` → **Access control (IAM)** → Role assignments | Identiteti `gh-deploy-<emri>` me rolin *Contributor* | Kush mund të bëjë deploy në grupin tuaj |
+| Microsoft Entra ID → **App registrations** → `gh-deploy-<emri>` → **Certificates & secrets → Federated credentials** | Credential me `repo:<github-user>/FakultetiApp:ref:refs/heads/main` | Pse GitHub hyn pa fjalëkalim |
+| GitHub → **Actions** → workflow-i i fundit | Hapat jeshilë: build, login (OIDC), deploy | Rrjedha e plotë CI/CD |
+
+Mund të ekzekutoni edhe `./scripts/kontrollo.ps1 -Student <emri>` për të kontrolluar automatikisht shumicën e këtyre.
+
 ### Hapi 6: Application Insights
 ```powershell
 $s   = "emri"
