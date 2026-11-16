@@ -40,6 +40,8 @@ Aplikacioni është një sistem i thjeshtë për Fakultetin e Informatikës (ASP
 | 5 | Deploy | Ju | GitHub → Actions |
 | 6–9 | Application Insights, Queue, Function | Ju | Mësimi 2 |
 
+Pas çdo hapi ekzekutoni `./scripts/kontrollo.ps1 -Student emri` për të parë që gjithçka është `[OK]`.
+
 **Respektoni rendin.** Nëse një hap dështon, shihni seksionin [Probleme të zakonshme](#9-probleme-të-zakonshme) para se të vazhdoni.
 
 ### Fjalorth i shkurtër (për fillestarë)
@@ -71,6 +73,28 @@ Aplikacioni është një sistem i thjeshtë për Fakultetin e Informatikës (ASP
 |---|---|
 | Kuti blu `rg-<emri>` | Grupi i resurseve të studentit: ju keni leje të plota (Contributor) |
 | Kuti portokalli `rg-shared` | Burime të përbashkëta, të krijuara nga profesori; secili student ka databazën/container-in e vet |
+
+### Çfarë është e përbashkët dhe çfarë e krijoni ju
+
+| | **E përbashkët** (`rg-shared`, e krijon profesori) | **Individuale** (`rg-<emri>`, e krijoni ju) |
+|---|---|---|
+| Databazat | SQL server dhe PostgreSQL server (një për të gjithë) | **Databaza juaj** brenda tyre: `db-<emri>` (SQL) dhe `<emri>` (PostgreSQL) |
+| Skedarët | Storage account | **Container-i juaj** `dokumentet-<emri>` |
+| Hosting | – | App Service plan dhe web app |
+| Sekretet | – | Key Vault `kv-<emri>-xxxxx` |
+| Monitorimi | – | Application Insights dhe Log Analytics |
+| Queue dhe Function | – | Storage account, queue `njoftime`, Function app |
+| Deploy | – | Forku juaj në GitHub dhe identiteti OIDC |
+
+**Pse ashtu?**
+- **SQL dhe PostgreSQL janë të përbashkët** sepse serverët janë burimet më të shtrenjta dhe më të ngadalta për t'u krijuar (PostgreSQL kushton edhe kur s'përdoret; SQL ka kufi falas vetëm për 10 databaza në subscription). Një server për klasën kursen para dhe kohë, ndërsa secili ka databazën e vet, kështu që s'ngatërroheni me njëri-tjetrin.
+- **Storage i përbashkët**: një account, por container i veçantë për secilin.
+- **Web app, Key Vault, App Insights dhe Function janë individuale** sepse ato janë pjesa që duhet të mësoni ta krijoni vetë, janë falas ose shumë të lira, dhe ju keni të drejta Contributor vetëm në `rg-<emri>`. Në `rg-shared` nuk keni qasje.
+- **Key Vault është individual** që të provoni vetë sekretet, Managed Identity dhe rolet (RBAC), pa varësi nga profesori.
+
+Kujdes: serverët e përbashkët përdorin një admin të vetëm (`dbadmin`), prandaj në prodhim çdo aplikacion do të kishte përdoruesin e vet. Këtu është e thjeshtuar për demo.
+
+**Kontrolloni progresin në çdo kohë:** `./scripts/kontrollo.ps1 -Student emri` tregon me `[OK]` / `[MUNGON]` çfarë keni krijuar dhe çfarë të bëni më tej.
 
 ### Rrjedha e të dhënave
 1. Përdoruesi hap web app-in (App Service) me HTTPS.
@@ -471,7 +495,7 @@ exceptions | order by timestamp desc | take 20
 ```
 src/                    aplikacioni ASP.NET Core MVC
 functions/              Azure Function (QueueTrigger)
-scripts/                setup.ps1, keyvault-student.ps1 (studenti);
+scripts/                setup.ps1, keyvault-student.ps1, kontrollo.ps1 (studenti);
                         setup-shared.ps1, provision-student.ps1, new-student-identity.ps1, cleanup.ps1 (profesori);
                         deploy-function.ps1
 docs/                   dokumentacioni (ky skedar) dhe img/arhitektura.svg

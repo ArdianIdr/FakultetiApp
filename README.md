@@ -3,6 +3,7 @@
 ASP.NET Core MVC (.NET 10) me **Azure SQL** (studentët), **PostgreSQL** (njoftimet), **Blob Storage** (dokumentet), **Key Vault** (sekretet), **App Service** (hosting), **Application Insights** (monitorim), **Storage Queue** dhe **Azure Function**.
 
 > **Filloni këtu: [docs/udhezues.md](docs/udhezues.md)** (udhëzues hap pas hapi për fillestarë)
+> https://github.com/fisko/FakultetiApp/blob/main/docs/udhezues.md
 >
 > **Të dhënat e klasës (databazat, fjalëkalimet):** [docs/te-dhenat-e-klases.md](docs/te-dhenat-e-klases.md)
 >
@@ -17,6 +18,8 @@ ASP.NET Core MVC (.NET 10) me **Azure SQL** (studentët), **PostgreSQL** (njofti
 5. Profesori krijon lidhjen OIDC dhe ju jep `AZURE_CLIENT_ID`.
 6. GitHub secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `APP_NAME`.
 7. **Actions → Deploy në Azure → Run workflow**, pastaj hapni `https://<APP_NAME>.azurewebsites.net`.
+
+Në çdo kohë: `./scripts/kontrollo.ps1 -Student emri` tregon çfarë keni krijuar dhe çfarë mungon.
 
 ## Si funksionon
 - Connection string-ët ruhen në **Key Vault-in tuaj**; App Service i lexon me Managed Identity përmes `@Microsoft.KeyVault(...)`, pa fjalëkalime në kod.
