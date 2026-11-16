@@ -15,7 +15,7 @@ ASP.NET Core MVC (.NET 8) me: **Azure SQL** (studentët), **PostgreSQL** (njofti
    ./scripts/setup.ps1 -Student emri
    ```
    Në fund shfaqet `APP_NAME`. Shënojeni.
-4. Mësuesi ju jep `AZURE_CLIENT_ID` (pasi i tregoni emrin e forkut tuaj).
+4. Profesori ju jep `AZURE_CLIENT_ID` (pasi i tregoni emrin e forkut tuaj).
 5. Në GitHub: **Settings → Secrets and variables → Actions → New repository secret**, shtoni:
    `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` (`e7dd866d-a284-43a6-90aa-9aad6684a2f0`), `AZURE_SUBSCRIPTION_ID` (`9f0f210c-952d-4f87-a34a-0f7c1f6a3dcb`), `APP_NAME`.
 6. **Actions → Deploy në Azure → Run workflow** (ose bëni një `git push`).
@@ -25,7 +25,7 @@ ASP.NET Core MVC (.NET 8) me: **Azure SQL** (studentët), **PostgreSQL** (njofti
 - `setup.ps1` ruan connection strings në **Key Vault**. App Service lexon me Managed Identity përmes `@Microsoft.KeyVault(...)`, pa fjalëkalime në kod.
 - GitHub Actions hyn në Azure me **OIDC** (pa fjalëkalim), me një federated credential vetëm për forkun tuaj.
 
-## Për mësuesin
+## Për profesorin
 ```powershell
 ./scripts/setup.ps1 -Student ardian
 ./scripts/new-student-identity.ps1 -Student ardian -GitHubRepo "ardian-gh/FakultetiApp"

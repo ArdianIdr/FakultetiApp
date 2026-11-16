@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-  (Për mësuesin) Krijon app registration + federated credential për forkun e studentit,
+  (Për profesorin) Krijon app registration + federated credential për forkun e studentit,
   e lejon vetëm në rg-<student> dhe printon 4 vlerat për GitHub Secrets.
 .EXAMPLE
   ./scripts/new-student-identity.ps1 -Student ardian -GitHubRepo "ardian123/FakultetiApp"
