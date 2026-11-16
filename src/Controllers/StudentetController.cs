@@ -1,12 +1,13 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Queues;
 using FakultetiApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FakultetiApp.Controllers;
 
-public class StudentetController(SqlDbContext db, BlobContainerClient blobs) : Controller
+public class StudentetController(SqlDbContext db, BlobContainerClient blobs, QueueClient queue, ILogger<StudentetController> log) : Controller
 {
     public async Task<IActionResult> Index() =>
         View(await db.Studentet.OrderBy(s => s.Mbiemri).ToListAsync());
@@ -27,6 +28,8 @@ public class StudentetController(SqlDbContext db, BlobContainerClient blobs) : C
         }
         db.Add(s);
         await db.SaveChangesAsync();
+        try { await queue.SendMessageAsync($"Student i ri: {s.Emri} {s.Mbiemri}"); }
+        catch (Exception ex) { log.LogWarning(ex, "Dërgimi në radhë dështoi"); }
         return RedirectToAction(nameof(Index));
     }
 
