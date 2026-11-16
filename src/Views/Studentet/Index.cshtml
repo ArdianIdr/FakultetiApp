@@ -1,0 +1,17 @@
+@model List<FakultetiApp.Models.Student>
+@{ ViewData["Title"] = "Studentët"; }
+<h2>Studentët <small class="text-muted fs-6">(Azure SQL)</small></h2>
+<a class="btn btn-primary mb-3" asp-action="Krijo">+ Student i ri</a>
+<table class="table table-striped">
+    <thead><tr><th>Emri</th><th>Mbiemri</th><th>Email</th><th>Viti</th><th>Dokumenti</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var s in Model)
+    {
+        <tr>
+            <td>@s.Emri</td><td>@s.Mbiemri</td><td>@s.Email</td><td>@s.Viti</td>
+            <td>@if (s.DokumentiUrl != null) { <a href="@s.DokumentiUrl" target="_blank">Shiko (Blob)</a> }</td>
+            <td><form asp-action="Fshij" asp-route-id="@s.Id" method="post"><button class="btn btn-sm btn-outline-danger">Fshij</button></form></td>
+        </tr>
+    }
+    </tbody>
+</table>

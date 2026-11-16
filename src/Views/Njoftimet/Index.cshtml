@@ -1,0 +1,13 @@
+@model List<FakultetiApp.Models.Njoftim>
+@{ ViewData["Title"] = "Njoftimet"; }
+<h2>Njoftimet <small class="text-muted fs-6">(PostgreSQL)</small></h2>
+<a class="btn btn-primary mb-3" asp-action="Krijo">+ Njoftim i ri</a>
+@foreach (var n in Model)
+{
+    <div class="card mb-2"><div class="card-body">
+        <h5 class="card-title">@n.Titulli</h5>
+        <p class="card-text">@n.Permbajtja</p>
+        <small class="text-muted">@n.Data.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+        <form asp-action="Fshij" asp-route-id="@n.Id" method="post" class="d-inline float-end"><button class="btn btn-sm btn-outline-danger">Fshij</button></form>
+    </div></div>
+}

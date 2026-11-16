@@ -1,0 +1,9 @@
+@model FakultetiApp.Models.Njoftim
+@{ ViewData["Title"] = "Njoftim i ri"; }
+<h2>Njoftim i ri</h2>
+<form asp-action="Krijo" method="post" style="max-width:480px">
+    <div class="mb-3"><label asp-for="Titulli" class="form-label"></label><input asp-for="Titulli" class="form-control" /><span asp-validation-for="Titulli" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Permbajtja" class="form-label"></label><textarea asp-for="Permbajtja" class="form-control" rows="4"></textarea><span asp-validation-for="Permbajtja" class="text-danger"></span></div>
+    <button class="btn btn-success">Publiko</button> <a class="btn btn-secondary" asp-action="Index">Anulo</a>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,14 @@
+@{ ViewData["Title"] = "Ballina"; }
+<div class="text-center py-4">
+    <h1 class="display-5">Fakulteti i Informatikës</h1>
+    <p class="lead">Aplikacion demo për programim në cloud me Microsoft Azure</p>
+</div>
+<div class="row g-3">
+    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h5>Studentët</h5><p>Të dhënat ruhen në <b>Azure SQL</b>, dokumentet në <b>Blob Storage</b>.</p>
+        <a class="btn btn-primary" asp-controller="Studentet" asp-action="Index">Hap</a></div></div></div>
+    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h5>Njoftimet</h5><p>Njoftimet ruhen në <b>Azure PostgreSQL</b>.</p>
+        <a class="btn btn-primary" asp-controller="Njoftimet" asp-action="Index">Hap</a></div></div></div>
+</div>
+<p class="text-muted mt-4">Sekretet (connection strings) lexohen nga <b>Azure Key Vault</b>.</p>
