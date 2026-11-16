@@ -11,9 +11,8 @@ function Hash5($text) {
 function NewPassword { (-join ((48..57) + (65..90) + (97..122) | Get-Random -Count 24 | ForEach-Object { [char]$_ })) + "aA1" }
 function Clean($name) { $name.ToLower() -replace '[^a-z0-9]', '' }
 
-# emrat e burimeve të përbashkëta (të qëndrueshëm)
-$sh = Hash5 "$SubscriptionId-shared"
-$SharedKv  = "kv-fakulteti-$sh"
-$SharedSql = "sql-fakulteti-$sh"
-$SharedPg  = "psql-fakulteti-$sh"
-$SharedStg = "stfakulteti$sh"
+# burimet e përbashkëta ekzistuese (rg-shared); rajonet: SQL swedencentral, PostgreSQL uksouth, të tjerat eastus
+$SharedKv  = "kv-fakulteti-f7k2q"
+$SharedSql = "sql-fakulteti-zmusi"
+$SharedPg  = "psql-fakulteti-qzpml"
+$SharedStg = "stfakultetif7k2q"
