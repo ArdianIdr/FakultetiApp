@@ -9,7 +9,7 @@ builder.Services.AddControllersWithViews();
 var cs = builder.Configuration.GetSection("ConnectionStrings");
 builder.Services.AddDbContext<SqlDbContext>(o => o.UseSqlServer(cs["Sql"] ?? "Server=(localdb)\\mssqllocaldb;Database=Fakulteti;Trusted_Connection=True"));
 builder.Services.AddDbContext<PgDbContext>(o => o.UseNpgsql(cs["Postgres"] ?? "Host=localhost;Database=fakulteti;Username=postgres;Password=postgres"));
-builder.Services.AddSingleton(_ => new BlobContainerClient(cs["Storage"] ?? "UseDevelopmentStorage=true", "dokumentet"));
+builder.Services.AddSingleton(_ => new BlobContainerClient(cs["Storage"] ?? "UseDevelopmentStorage=true", builder.Configuration["Blob:Container"] ?? "dokumentet"));
 
 var app = builder.Build();
 
