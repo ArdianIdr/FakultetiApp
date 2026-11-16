@@ -13,19 +13,23 @@ param(
     [string]$TenantId = "e7dd866d-a284-43a6-90aa-9aad6684a2f0"
 )
 $ErrorActionPreference = "Stop"
-$s = $Student.ToLower() -replace '[^a-z0-9]', ''
+$s = $Student.ToLower() -replace '[^a-z0-9]', ''   # emri i pastruar
 $rg = "rg-$s"
 az account set --subscription $SubscriptionId
 
+# 1) App registration (identiteti i GitHub Actions); nëse ekziston e ripërdorim, pra skripti mund të rinisët
 $appId = az ad app list --display-name "gh-deploy-$s" --query "[0].appId" -o tsv
 if (-not $appId) { $appId = az ad app create --display-name "gh-deploy-$s" --query appId -o tsv }
+# 2) Service principal: "përdoruesi" real i atij identiteti në tenant
 if (-not (az ad sp list --filter "appId eq '$appId'" --query "[0].id" -o tsv)) { az ad sp create --id $appId -o none }
+# 3) Leja Contributor vetëm në rg-<student> (nuk prek grupet e tjera)
 az role assignment create --assignee $appId --role Contributor `
     --scope "/subscriptions/$SubscriptionId/resourceGroups/$rg" -o none
 
 # GitHub mund ta dërgojë subject-in me ID (owner@id/repo@id) ose me emra; regjistrojmë të dyja
 $subjects = @("repo:${GitHubRepo}:ref:refs/heads/$Branch")
 $ErrorActionPreference = "Continue"
+# Pyesim GitHub për forkun (për ID-të); nëse nuk ekziston, gh kthen gabim JSON pa "id"
 $info = gh api "repos/$GitHubRepo" 2>$null | ConvertFrom-Json
 $ErrorActionPreference = "Stop"
 if (-not $info.id) { $info = $null }
@@ -34,6 +38,7 @@ if ($info) {
     $subjects += "repo:$($info.owner.login)@$($info.owner.id)/$($info.name)@$($info.id):ref:refs/heads/$Branch"
 }
 $n = 0
+# 4) Federated credential: i tregon Azure se "workflow-t e këtij repo/branch mund të hyjnë pa fjalëkalim" (OIDC)
 foreach ($subject in $subjects) {
     $n++
     $cred = @{
@@ -43,13 +48,15 @@ foreach ($subject in $subjects) {
         audiences = @("api://AzureADTokenExchange")
     } | ConvertTo-Json -Compress
     $have = az ad app federated-credential list --id $appId --query "[?subject=='$subject'].name" -o tsv
-    if ($have) { continue }
+    if ($have) { continue }   # ekziston tashmë, e anashkalojmë
+    # JSON shkruhet në skedar të përkohshëm për shkak të thonjëzave
     $tmp = New-TemporaryFile
     [IO.File]::WriteAllText($tmp.FullName, $cred)
     az ad app federated-credential create --id $appId --parameters "@$($tmp.FullName)" -o none
     Remove-Item $tmp
 }
 $app = az webapp list -g $rg --query "[0].name" -o tsv
+# Këto 4 vlera ia jepni studentit për GitHub -> Settings -> Secrets (nuk janë sekrete të vërteta, pa fjalëkalim)
 Write-Host "`nGitHub Secrets për $GitHubRepo :" -ForegroundColor Green
 Write-Host "AZURE_CLIENT_ID       = $appId"
 Write-Host "AZURE_TENANT_ID       = $TenantId"

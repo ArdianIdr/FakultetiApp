@@ -12,29 +12,34 @@ $ErrorActionPreference = "Stop"
 $s = Clean $Student
 Run az account set --subscription $SubscriptionId
 
-$sqlDb = "db-$s"
-$pgDb  = $s
+$sqlDb = "db-$s"   # emri i databazës SQL
+$pgDb  = $s        # emri i databazës PostgreSQL
+# Fjalëkalimet e adminit lexohen nga Key Vault i përbashkët (nuk shkruhen në skript)
 $sqlPwd = az keyvault secret show --vault-name $SharedKv -n shared-sql-admin-password --query value -o tsv
 $pgPwd  = az keyvault secret show --vault-name $SharedKv -n shared-pg-admin-password  --query value -o tsv
 
 Write-Host "== SQL databazë (free offer)" -ForegroundColor Cyan
+# Serverless + --use-free-limit = oferta falas e Azure SQL; pauzohet vetë kur s'përdoret
 Run az sql db create -g $SharedRg -s $SharedSql -n $sqlDb --edition GeneralPurpose --family Gen5 --capacity 2 --compute-model Serverless --use-free-limit --free-limit-exhaustion-behavior AutoPause -o none
 
 Write-Host "== PostgreSQL databazë" -ForegroundColor Cyan
 Run az postgres flexible-server db create -g $SharedRg -s $SharedPg -d $pgDb -o none
 
 Write-Host "== Blob container" -ForegroundColor Cyan
+# Një container për studentin; --public-access blob = skedarët lexohen me link, por lista nuk është publike
 $stgKey = az storage account keys list -n $SharedStg -g $SharedRg --query "[0].value" -o tsv
 Run az storage container create -n "dokumentet-$s" --account-name $SharedStg --account-key $stgKey --public-access blob -o none
 $stgCs = az storage account show-connection-string -n $SharedStg -g $SharedRg --query connectionString -o tsv
 
 Write-Host "== Sekretet" -ForegroundColor Cyan
+# Connection string-ët e studentit; emrat kanë prefiks <student>- që të mos përzihen me të tjerët
 $secrets = @{
     "$s-SqlConnection"      = "Server=tcp:$SharedSql.database.windows.net,1433;Database=$sqlDb;User ID=$Admin;Password=$sqlPwd;Encrypt=True;TrustServerCertificate=False;Connection Timeout=60;"
     "$s-PostgresConnection" = "Host=$SharedPg.postgres.database.azure.com;Port=5432;Database=$pgDb;Username=$Admin;Password=$pgPwd;SSL Mode=Require;Trust Server Certificate=true"
     "$s-StorageConnection"  = $stgCs
 }
 $kvId = az keyvault show -n $SharedKv -g $SharedRg --query id -o tsv
+# Identiteti i web app-it të studentit (nëse web app ekziston)
 $app = az webapp list -g "rg-$s" --query "[0].name" -o tsv
 $principal = $null
 if ($app) { $principal = az webapp identity show -n $app -g "rg-$s" --query principalId -o tsv }

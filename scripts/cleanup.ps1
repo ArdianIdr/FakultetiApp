@@ -11,8 +11,9 @@ if ($StopOnly) {
     az postgres flexible-server stop -g $SharedRg -n $SharedPg
     return
 }
+# Fshirja e plotë e studentit: burimet në rg-<emri>, pastaj databazat, container-i dhe sekretet në burimet e përbashkëta
 $ids = az resource list -g "rg-$s" --query "[].id" -o tsv
-if ($ids) { az resource delete --ids $ids.Split("`n") }
+if ($ids) { az resource delete --ids $ids.Split("`n") }   # fshin web app, plan, Key Vault etj.
 az sql db delete -g $SharedRg -s $SharedSql -n "db-$s" --yes
 az postgres flexible-server db delete -g $SharedRg -s $SharedPg -d $s --yes
 $key = az storage account keys list -n $SharedStg -g $SharedRg --query "[0].value" -o tsv
