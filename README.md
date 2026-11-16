@@ -25,6 +25,10 @@ ASP.NET Core MVC (.NET 10) me: **Azure SQL** (studentët), **PostgreSQL** (njoft
 - `setup.ps1` ruan connection strings në **Key Vault**. App Service lexon me Managed Identity përmes `@Microsoft.KeyVault(...)`, pa fjalëkalime në kod.
 - GitHub Actions hyn në Azure me **OIDC** (pa fjalëkalim), me një federated credential vetëm për forkun tuaj.
 
+## Mësimi 2: Application Insights, Queue dhe Function
+
+Udhëzues hap pas hapi me komanda dhe detyra: [docs/mesimi-2-appinsights-function.md](docs/mesimi-2-appinsights-function.md)
+
 ## Për profesorin
 Burimet e përbashkëta (SQL server, PostgreSQL server, Key Vault, Storage) jetojnë në `rg-shared`; çdo student ka databazën, container-in dhe sekretet e veta.
 ```powershell
@@ -39,3 +43,5 @@ Studentët kanë Contributor vetëm në `rg-<emri>`, pra nuk kanë qasje në `rg
 Kujdes: connection strings përdorin admin-in e serverit të përbashkët, kështu që kodi i një studenti teknikisht mund të prekë databazat e të tjerëve. Është e pranueshme për demo, jo për prodhim.
 Kosto: SQL ka kufi falas (10 databaza për abonim), App Service F1 është falas, PostgreSQL B1ms nuk ka nivel falas të përhershëm, Key Vault dhe Storage kushtojnë shumë pak.
 Lokalisht: `dotnet run --project src` (kërkon LocalDB dhe PostgreSQL ose vendosni `ConnectionStrings__*`).
+
+> Shënim për profesorin: herën e parë në subscription duhet regjistruar `Microsoft.OperationalInsights`, `microsoft.insights` dhe `Microsoft.App` (`az provider register -n <emri>`).
